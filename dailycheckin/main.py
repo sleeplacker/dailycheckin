@@ -63,7 +63,7 @@ def check_config(task_list):
         return False, False, None, None
 
 
-def save_config(config_path, data):
+def save_config(config_path, data) -> bool:
     """Atomically persist runtime credential refreshes to config.json."""
     temp_path = f"{config_path}.tmp"
     try:
@@ -71,6 +71,7 @@ def save_config(config_path, data):
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.write("\n")
         os.replace(temp_path, config_path)
+        return True
     except Exception as e:
         try:
             if os.path.exists(temp_path):
@@ -78,6 +79,7 @@ def save_config(config_path, data):
         except OSError:
             pass
         print(f"更新 config.json 失败: {e}")
+        return False
 
 
 def checkin():
@@ -118,8 +120,8 @@ def checkin():
                 finally:
                     check_item_after = json.dumps(check_item, ensure_ascii=False, sort_keys=True)
                     if check_item_after != check_item_before and config_path and config_data:
-                        save_config(config_path, config_data)
-                        print("已将服务器更新的 Cookie 写回 config.json")
+                        if save_config(config_path, config_data):
+                            print("已将服务器更新的 Cookie 写回 config.json")
         print("\n\n")
         try:
             url = "https://pypi.org/pypi/dailycheckin/json"
